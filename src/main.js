@@ -22,22 +22,25 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = .8;
+renderer.toneMappingExposure = 1.05;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x17130f);
 scene.fog = new THREE.Fog(0x17130f, 8, 42);
 const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, .1, 100);
 camera.position.set(0, 1.65, 8);
-scene.add(new THREE.HemisphereLight(0xad8d69, 0x17130f, 1.2));
+scene.add(new THREE.HemisphereLight(0xd8c2a3, 0x211a15, 1.8));
+const entranceLight = new THREE.DirectionalLight(0xffe0b2, 1.5);
+entranceLight.position.set(2, 4, 8);
+scene.add(entranceLight);
 
 const mat = (color, roughness = .9) => new THREE.MeshStandardMaterial({ color, roughness });
 const box = (geo, material, pos) => { const m = new THREE.Mesh(geo, material); m.position.set(...pos); m.receiveShadow = true; scene.add(m); return m; };
-box(new THREE.BoxGeometry(8, .1, 84), mat(0x28231d), [0, -.06, -34]);
-box(new THREE.BoxGeometry(8, .1, 84), mat(0x1d1915), [0, 5, -34]);
-box(new THREE.BoxGeometry(.1, 5, 84), mat(0x362f27), [-4, 2.5, -34]);
-box(new THREE.BoxGeometry(.1, 5, 84), mat(0x302a24), [4, 2.5, -34]);
+box(new THREE.BoxGeometry(8, .1, 84), mat(0x332c25), [0, -.06, -34]);
+box(new THREE.BoxGeometry(8, .1, 84), mat(0x29231e), [0, 5, -34]);
+box(new THREE.BoxGeometry(.1, 5, 84), mat(0x463c32), [-4, 2.5, -34]);
+box(new THREE.BoxGeometry(.1, 5, 84), mat(0x40372f), [4, 2.5, -34]);
 for (let i = 0; i < 13; i++) {
-  const light = new THREE.PointLight(0xe5ba78, 21, 7); light.position.set(0, 4.55, -i * 7 - 2); scene.add(light);
+  const light = new THREE.PointLight(0xffc982, 32, 8); light.position.set(0, 4.4, -i * 7 - 2); scene.add(light);
   box(new THREE.CylinderGeometry(.13, .13, .03, 24), new THREE.MeshBasicMaterial({color:0xffdfa4}), [0, 4.88, -i * 7 - 2]).rotation.x = Math.PI / 2;
 }
 const artworks = [];
@@ -52,12 +55,18 @@ stories.forEach((story, index) => {
   group.add(frame, picture, shape, orb); group.userData.story = story; scene.add(group); artworks.push(group);
 });
 
-let entered = false, targetZ = 8;
+let entered = false, targetZ = 8, galleryScrollY = 0;
+const cameraTargetFromScroll = scrollPosition => 8 - (scrollPosition / Math.max(1, document.body.scrollHeight - innerHeight)) * 36;
 document.querySelector('.enter').onclick = () => { entered = true; document.body.classList.add('entered'); document.querySelector('main').classList.add('visible'); scrollTo(0,0); };
 const modal = document.querySelector('.modal');
 const storyFull = modal.querySelector('.story-full');
 const readMore = modal.querySelector('.read-more');
-const closeStory = () => { modal.hidden = true; document.body.classList.remove('modal-open'); };
+const closeStory = () => {
+  modal.hidden = true;
+  document.body.classList.remove('modal-open');
+  scrollTo(0, galleryScrollY);
+  targetZ = cameraTargetFromScroll(galleryScrollY);
+};
 const openStory = story => {
   modal.querySelector('.modal-art').style.setProperty('--art', `#${story.color.toString(16).padStart(6, '0')}`);
   modal.querySelector('.modal-art span').textContent = story.year;
@@ -67,6 +76,7 @@ const openStory = story => {
   storyFull.replaceChildren(...story.content.map(paragraph => { const element = document.createElement('p'); element.textContent = paragraph; return element; }));
   storyFull.hidden = true;
   readMore.hidden = false;
+  galleryScrollY = scrollY;
   modal.hidden = false;
   document.body.classList.add('modal-open');
   document.querySelector('.close').focus();
@@ -78,7 +88,7 @@ addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidd
 const raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
 canvas.addEventListener('pointermove', e => { pointer.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); raycaster.setFromCamera(pointer,camera); canvas.style.cursor = raycaster.intersectObjects(artworks,true).length ? 'pointer' : 'default'; });
 canvas.addEventListener('click', () => { raycaster.setFromCamera(pointer,camera); const hit = raycaster.intersectObjects(artworks,true)[0]; if(hit){let o=hit.object;while(o&&!o.userData.story)o=o.parent;if(o)openStory(o.userData.story)}});
-addEventListener('scroll', () => { if (entered) targetZ = 8 - (scrollY / (document.body.scrollHeight - innerHeight)) * 36; });
+addEventListener('scroll', () => { if (entered && modal.hidden) targetZ = cameraTargetFromScroll(scrollY); });
 addEventListener('resize', () => { camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight); });
 const clock = new THREE.Clock();
 function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();camera.position.z += (targetZ-camera.position.z)*.045;camera.position.x=Math.sin((8-camera.position.z)*.12)*.25;camera.lookAt(0,1.55,camera.position.z-6);artworks.forEach((a,i)=>a.position.y=2.3+Math.sin(t+i)*.018);renderer.render(scene,camera)}animate();
