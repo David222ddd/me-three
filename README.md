@@ -74,6 +74,23 @@ npm run dev
 
 这两条命令都要在能看到 `package.json` 的 `me-three` 文件夹中执行。可以先运行 `dir`（Windows）或 `ls`（macOS）确认文件是否存在。如果出现 `Could not read package.json` 或 `ENOENT`，说明终端打开了错误的文件夹，请重新按照上面的步骤进入 `me-three`。
 
+### 更新代码后需要重新安装依赖吗？
+
+通常**不需要**。获取最新代码后，可以直接运行：
+
+```bash
+npm run dev
+```
+
+只有以下情况才需要再次运行 `npm install`：
+
+- `package.json` 或 `package-lock.json` 有变化；
+- 项目新增或升级了依赖；
+- 你删除了 `node_modules` 文件夹；
+- 运行时提示某个模块无法找到。
+
+如果你是重新下载 ZIP 到一个全新的文件夹，新文件夹里没有 `node_modules`，那么需要在新文件夹里运行一次 `npm install`。本次交互修复只修改了 JavaScript、CSS 和文档，没有修改依赖，所以在原来的项目文件夹里不需要重新安装。
+
 终端出现 `Local` 地址后，在浏览器打开：
 
 - 展馆首页：<http://localhost:5173/>
