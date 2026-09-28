@@ -1,0 +1,19 @@
+# 宝塔面板会自动生成 server 外层配置。请只复制下方 location 片段，
+# 不要用本文件完整覆盖宝塔生成的配置。
+
+location / {
+    try_files $uri $uri/ /index.html;
+}
+
+# HTML 不做长期缓存，确保每次部署后访客能拿到新的资源入口。
+location ~* \.html$ {
+    expires -1;
+    add_header Cache-Control "no-cache, no-store, must-revalidate";
+}
+
+# Vite 生成的带内容哈希静态资源可以长期缓存。
+location /assets/ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+    try_files $uri =404;
+}
